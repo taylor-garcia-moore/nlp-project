@@ -1,5 +1,6 @@
-!pip install -U spacy
-!python -m spacy download en_core_web_sm
+## install these packages before running
+# !pip install -U spacy
+# !python -m spacy download en_core_web_sm
 
 import pandas as pd
 import re
