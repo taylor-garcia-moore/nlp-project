@@ -1,21 +1,28 @@
-# imports 
-import pandas
+import pandas as pd
 import re
 import unicodedata
 import nltk
+from nltk.stem.wordnet import WordNetLemmatizer
 from nltk.tokenize.toktok import ToktokTokenizer
 from nltk.corpus import stopwords
+import spacy
 
 
-def basic_clean(string):
+def basic_clean_keep_code(string):
     '''
     Takes in a string, makes all characters lowercase, normalizes all characters, and removes unnnecessary special characters
     import re
     import unicodedata
     '''
+    # Remove line breaks
+    string = re.sub(r'\n', ' ', string)
+    
+    # Remove the urls
+    string = re.sub(r'https?://[^\s]+', '', string)
+    
     # lowercase all words
     lowered = string.lower()
-    
+
     # normalize unicode characters using lowered
     normalized = unicodedata.normalize('NFKD', lowered).encode('ascii', 'ignore').decode('utf-8', 'ignore')
     
@@ -38,41 +45,6 @@ def tokenize(string):
     
     return tokenized
 
-def stem(string):
-    '''
-    Takes in a string and stems all words in tthe string, returrning a stemmed version of it
-    Modules:
-        import nltk
-    '''
-    # initialize stem object
-    ps = nltk.porter.PorterStemmer()
-
-    # get a list of stems for each word in the string
-    stems = [ps.stem(word) for word in string.split()]
-
-    # joining the words back together, using a space to separate each
-    stemmed = ' '.join(stems)
-
-    # getting the stemmedstring back
-    return stemmed
-
-def lemmatize(string):
-    '''
-    Takes in a string and returns it with all words in lemmatized form
-    Modules:
-        import nltk
-    '''
-    # initializing lematizing object
-    wnl = nltk.stem.WordNetLemmatizer()
-
-    # getting a list of root words from each word in the split string
-    lemmas = [wnl.lemmatize(word) for word in tokenized.split()]
-
-    # rejoining the list of root words to form a lemmatized corpus
-    lemmatized = ' '.join(lemmas)
-    
-    # exit and return lemmatized info
-    return lemmatized
 
 def remove_stopwords(string, extra_words=[], exclude_words=[]):
     '''
@@ -104,32 +76,71 @@ def remove_stopwords(string, extra_words=[], exclude_words=[]):
     # exit and return the string
     return string_without_stopwords
 
-def prepare_df(data, col: str, transpose = False):
+def cleaned_with_code_included(x):
     '''
-    Takes in a list or a dictionary of text data, turns it into a dataframe, adds a cleaned data col, stemmed col, and lemmatized col
+    Takes in a string literal and performs cleaning, tokenizing, and removes the stop words
+    
+    '''
+    # runs a basic clean
+    x = basic_clean_keep_code(x)
+    
+    # tokenizes the words
+    x = tokenize(x)
+    
+    # removes the stop words
+    x = remove_stopwords(x)
+    
+    # returns string with all cleaning steps performed
+    return x
+
+def lemmatize(string):
+    '''
+    Takes in a string and returns it with all words in lemmatized form
     Modules:
-        import pandas as pd
+        import nltk
     '''
-    # if kwarg is true, 
-    if transpose == True:
-        
-        # transpose the df (dict)
-        df = pd.DataFrame(data).T
+    # initializing lematizing object
+    wnl = nltk.stem.WordNetLemmatizer()
+
+    # getting a list of root words from each word in the split string
+    lemmas = [wnl.lemmatize(word) for word in string.split()]
+
+    # rejoining the list of root words to form a lemmatized corpus
+    lemmatized = ' '.join(lemmas)
     
-    # by default
-    else:
-        
-        # create regular df with the data (list)
-        df = pd.DataFrame(data)
+    # exit and return lemmatized info
+    return lemmatized
+
+def spacy_string(string):
+    '''
+    Takes in a string and returns it with all words in spacy-lemmatization form form
+    Modules:
+        import spacy
+    '''
+    # initializing lematizing object
+    nlp = spacy.load('en_core_web_sm')
     
-    # apply the basic clean function to the text col and add to the df as a new col
-    df['clean'] = df[col].apply(basic_clean)
+    # getting lemmatized words
+    string_stemmed = [word.lemma_ for word in nlp(string)]
     
-    # apply stem function to cleaned col and add to the df as a new col
-    df['stemmed'] = df.clean.apply(stem)
+    # rejoining words
+    string_stemmed = ' '.join(string_stemmed)
     
-    # apply lemmatize funtion to cleaned col and add to the df as a new col
-    df['lemmatized'] = df.clean.apply(lemmatize)
+    # exit and return lemmatized info
+    return string_stemmed
+
+def basic_prepare(df):
+    '''
+    Takes in a df and adds columns with cleaned code
+    '''
     
-    # returned prepped df
+    # initial cleaning completed
+    df['basic_clean_with_code'] = df['readme_contents'].apply(lambda x: cleaned_with_code_included(x))
+    
+    # getting spacy stemming
+    df['spacy'] = df['basic_clean_with_code'].apply(lambda x: spacy_string(x))
+    
+    # getting lemmatized text
+    df['lem'] = df['basic_clean_with_code'].apply(lambda x: lemmatize(x))
+    
     return df
