@@ -75,7 +75,8 @@ def merge_analyze_results(df):
 
     # Merge merged_df with the original df DataFrame
     df = pd.merge(df, merged_df, on='Language', how='left')
-
+    # removes "Average README Length" column
+    df.drop("Average README Length", axis=1, inplace=True)
     # Return the updated DataFrame
     return df
 

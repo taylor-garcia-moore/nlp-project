@@ -4,6 +4,7 @@
 # In[ ]:
 import re
 from bs4 import BeautifulSoup
+from sklearn.feature_extraction.text import CountVectorizer
 
 def clean_readme_data(df):
     # Convert text to lowercase
@@ -133,6 +134,35 @@ def apply_pos_tagging_and_lemmatization(df):
 import nltk
 from nltk.corpus import stopwords
 
+
+
+from nltk.corpus import stopwords
+import re
+
+def apply_stopword_removal(df):
+    # Get the default set of stopwords
+    default_stopwords = set(stopwords.words('english'))
+
+    # Add prepositions to the stopwords set
+    prepositions = ['about', 'above', 'across', 'after', 'against', 'along', 'among', 'around',
+                    'as', 'at', 'before', 'behind', 'below', 'beneath', 'beside', 'between',
+                    'beyond', 'but', 'by', 'concerning', 'considering', 'despite', 'down',
+                    'during', 'except', 'for', 'from', 'in', 'inside', 'into', 'like',
+                    'near', 'of', 'off', 'on', 'onto', 'out', 'outside', 'over', 'past',
+                    'regarding', 'round', 'since', 'through', 'throughout', 'to', 'toward',
+                    'under', 'underneath', 'until', 'unto', 'up', 'upon', 'with', 'within',
+                    'without', 'http', 'https', 'com'] 
+
+    stopwords_with_prepositions = default_stopwords.union(prepositions)
+
+    # Apply stopwords removal to 'Readme' column
+    stop = set(stopwords_with_prepositions)
+    df['Readme'] = df['Readme'].apply(lambda x: " ".join(word for word in re.findall(r'\b\w+\b', x.lower()) if word not in stop))
+
+    return df
+from nltk.corpus import stopwords
+import re
+
 def apply_stopwords_removal(df):
     # Get the default set of stopwords
     default_stopwords = set(stopwords.words('english'))
@@ -145,16 +175,15 @@ def apply_stopwords_removal(df):
                     'near', 'of', 'off', 'on', 'onto', 'out', 'outside', 'over', 'past',
                     'regarding', 'round', 'since', 'through', 'throughout', 'to', 'toward',
                     'under', 'underneath', 'until', 'unto', 'up', 'upon', 'with', 'within',
-                    'without','htttp','https','com']
+                    'without', 'http', 'https', 'com']
 
     stopwords_with_prepositions = default_stopwords.union(prepositions)
 
     # Apply stopwords removal to 'Readme' column
     stop = set(stopwords_with_prepositions)
-    df['Readme'] = df['Readme'].apply(lambda x: " ".join(x for x in x.split() if x not in stop))
+    df['Readme'] = df['Readme'].apply(lambda x: " ".join(word for word in x if word not in stop))  # Removed the unnecessary x.split()
 
     return df
-
 
 # In[ ]:
 from collections import Counter
@@ -178,6 +207,8 @@ def extract_common_words(df):
 from sklearn.feature_extraction.text import CountVectorizer
 
 def extract_ngrams(df):
+    
+    df['Readme'] = df['Readme'].apply(nltk.word_tokenize)
     # Convert the 'Readme' column into a string
     readme_text = [' '.join(words) for words in df['Readme']]
 
@@ -204,3 +235,30 @@ def extract_ngrams(df):
     print(bigram_features)
     print("\nTrigrams:")
     print(trigram_features)
+    
+from sklearn.feature_extraction.text import CountVectorizer
+
+def extracted_ngrams(df):
+    df['Readme'] = df['Readme'].apply(nltk.word_tokenize)
+    # Convert the 'Readme' column into a string
+    readme_text = [' '.join(words) for words in df['Readme']]
+
+    # Create a CountVectorizer instance for bigrams
+    bigram_vectorizer = CountVectorizer(ngram_range=(2, 2))
+    X_bigram = bigram_vectorizer.fit_transform(readme_text)
+
+    # Get the feature names (bigrams)
+    bigram_features = bigram_vectorizer.get_feature_names()
+
+    # Calculate the frequencies of bigrams
+    bigram_counts = X_bigram.sum(axis=0).A1
+    bigram_freqs = dict(zip(bigram_features, bigram_counts))
+
+    if len(bigram_freqs) == 0:
+        print("No bigrams available. Documents may contain only stop words.")
+    else:
+        # Print the top 10 most frequent bigrams
+        top_bigrams = Counter(bigram_freqs).most_common(10)
+        print("Top 10 Bigrams:")
+        for bigram, count in top_bigrams:
+            print(f"{bigram}: {count}")
