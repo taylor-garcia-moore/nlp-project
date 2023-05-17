@@ -3,6 +3,8 @@
 
 # In[ ]:
 import re
+import pandas as pd
+import numpy as np
 from bs4 import BeautifulSoup
 from sklearn.feature_extraction.text import CountVectorizer
 
@@ -39,6 +41,8 @@ from nltk.tokenize import word_tokenize
 from nltk.tokenize import word_tokenize
 from nltk.sentiment.util import mark_negation
 
+from nltk.tokenize import word_tokenize
+
 def preprocess_text(df):
     def expand_contractions(text):
         contraction_mapping = {
@@ -49,11 +53,6 @@ def preprocess_text(df):
         words = text.split()
         expanded_words = [contraction_mapping[word.lower()] if word.lower() in contraction_mapping else word for word in words]
         return ' '.join(expanded_words)
-
-    def split_negations(text):
-        tokenized_text = word_tokenize(text)
-        split_text = mark_negation(tokenized_text)
-        return ' '.join(split_text)
 
     def expand_abbreviations(text):
         abbreviation_mapping = {
@@ -70,11 +69,11 @@ def preprocess_text(df):
         return ' '.join(filtered_words)
 
     df['Readme'] = df['Readme'].apply(expand_contractions)
-    df['Readme'] = df['Readme'].apply(split_negations)
     df['Readme'] = df['Readme'].apply(expand_abbreviations)
     df['Readme'] = df['Readme'].apply(lambda x: remove_short_or_long_words(x, min_length=2, max_length=20))
 
     return df['Readme']
+
 
 
 # In[ ]:
@@ -262,3 +261,40 @@ def extracted_ngrams(df):
         print("Top 10 Bigrams:")
         for bigram, count in top_bigrams:
             print(f"{bigram}: {count}")
+            
+import seaborn as sns  
+import matplotlib.pyplot as plt
+def custom_visual():
+    """
+    This function configures some visual settings to enhance the readability and aesthetics of data visualizations.
+
+    The settings include configuring the Seaborn style to "darkgrid" for better visual contrast and readability,
+    setting the Matplotlib style to "dark_background" for a visually appealing dark theme, setting the default
+    float format in Pandas to display two decimal places, setting the maximum column width in Pandas to display the
+    entire content without truncation, setting the display width in Pandas to match the terminal/console width, and
+    resetting the column header justification in Pandas to its default (left-aligned).
+
+    Additionally, the function sets the maximum number of rows to display to 400.
+    """
+    # Set the Seaborn style to "darkgrid" for better visual contrast and readability
+    sns.set_style("darkgrid")
+
+    # Set the Matplotlib style to "dark_background" for a visually appealing dark theme
+    plt.style.use('dark_background')
+
+    # Configure the default float format in Pandas to display two decimal places
+    pd.options.display.float_format = '{:20,.2f}'.format
+
+    # Set the maximum column width in Pandas to display the entire content without truncation
+    pd.set_option('display.max_colwidth', None)
+
+    # Set the display width in Pandas to match the terminal/console width
+    pd.set_option('display.width', None)
+
+    # Reset the column header justification in Pandas to its default (left-aligned)
+    pd.reset_option("colheader_justify", 'right')
+    
+    # Set the maximum number of rows to display to 400
+    pd.set_option('display.max_rows', 50)
+    
+    print("This function configures some visual settings to enhance the readability and aesthetics of data visualizations. The settings include configuring the Seaborn style to darkgrid for better visual contrast and readability, setting the Matplotlib style to dark_background for a visually appealing dark theme, setting the default float format in Pandas to display two decimal places, setting the maximum column width in Pandas to display the entire content without truncation, setting the display width in Pandas to match the terminal/console width, and resetting the column header justification in Pandas to its default (left-aligned). Additionally, the function sets the maximum number of rows to display to 400.")

@@ -222,20 +222,23 @@ def visualize_top_words(df):
     plt.show()
 import pandas as pd
 
-def process_dataframe(df):
+
+
+def process_dataframes(df):
+    top_languages = ['Python', 'C++', 'JavaScript']
+
     # Loop through the DataFrame rows
     for index, row in df.iterrows():
-        # Check if the language is Python
-        if row['Language'] == 'Python':
-            # Assign 'Python' label to the 'Language' column
-            df.at[index, 'Language'] = 'Python'
+        # Check if the language is in the top languages list
+        if row['Language'] in top_languages:
+            # Assign the language label to the 'Language' column
+            df.at[index, 'Language'] = row['Language']
         else:
             # Assign 'Other' label to the 'Language' column
             df.at[index, 'Language'] = 'Other'
 
-    # Print the updated DataFrame
-    print(df)
-    
+    return df
+
 from sklearn.feature_extraction.text import CountVectorizer
 from collections import Counter
 import matplotlib.pyplot as plt
